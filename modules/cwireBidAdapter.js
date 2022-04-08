@@ -178,19 +178,30 @@ export const spec = {
 
     let refgroups = [];
 
-    const cwCreativeId = parseInt(getQueryVariable(CW_CREATIVE_QUERY), 10) || null;
+    const cwCreativeId = parseInt(getQueryVariable(CW_CREATIVE_QUERY), 10).toString() || null;
     const cwCreativeIdFromConfig = this.getFirstValueOrNull(slots, 'cwcreative');
     const refGroupsFromConfig = this.getFirstValueOrNull(slots, 'refgroups');
     const cwApiKeyFromConfig = this.getFirstValueOrNull(slots, 'cwapikey');
     const rgQuery = getQueryVariable(CW_GROUPS_QUERY);
 
+    let cwCreativeIdToApi = null;
+
+    // if cwcreative is set in config, convert to string, and send to api
+    if (cwCreativeIdFromConfig !== null) {
+      cwCreativeIdToApi = cwCreativeIdFromConfig.toString();
+    }
+
+    // if cwcreative is set via request url param, make sure that it is a number, and convert
+    // to string to be sent to api
+    if (!isNaN(cwCreativeId) && cwCreativeId > 0) {
+      cwCreativeIdToApi = cwCreativeId;
+    }
     if (refGroupsFromConfig !== null) {
       refgroups = refGroupsFromConfig.split(',');
     }
 
+    // override if query param is present
     if (rgQuery !== null) {
-      // override if query param is present
-      refgroups = [];
       refgroups = rgQuery.split(',');
     }
 
@@ -199,7 +210,7 @@ export const spec = {
     const payload = {
       cwid: localStorageCWID,
       refgroups,
-      cwcreative: cwCreativeId || cwCreativeIdFromConfig,
+      cwcreative: cwCreativeIdToApi,
       slots: slots,
       cwapikey: cwApiKeyFromConfig,
       httpRef: referer || '',

@@ -144,7 +144,7 @@ describe('C-WIRE bid adapter', () => {
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.slots[0].sizes[0]).to.equal('1x1');
-      expect(requests.data.cwcreative).to.equal(54321);
+      expect(requests.data.cwcreative).to.equal('54321');
       expect(requests.data.cwapikey).to.equal('xxx-xxx-yyy-zzz-uuid');
       expect(requests.data.refgroups[0]).to.equal('group_1');
     });
@@ -171,7 +171,7 @@ describe('C-WIRE bid adapter', () => {
       expect(requests.data.slots.length).to.equal(2);
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.cwid).to.be.null;
-      expect(requests.data.cwcreative).to.equal(1234);
+      expect(requests.data.cwcreative).to.equal('1234');
       expect(requests.data.cwapikey).to.equal('api_key_5');
       expect(requests.data.refgroups[0]).to.equal('group_5');
     });
@@ -198,7 +198,7 @@ describe('C-WIRE bid adapter', () => {
       expect(requests.data.slots.length).to.equal(2);
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.cwid).to.be.null;
-      expect(requests.data.cwcreative).to.equal(33);
+      expect(requests.data.cwcreative).to.equal('33');
       expect(requests.data.cwapikey).to.equal('api_key_33');
       expect(requests.data.refgroups[0]).to.equal('group_33');
     });
@@ -225,7 +225,7 @@ describe('C-WIRE bid adapter', () => {
       expect(requests.data.slots.length).to.equal(3);
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.cwid).to.be.null;
-      expect(requests.data.cwcreative).to.equal(33);
+      expect(requests.data.cwcreative).to.equal('33');
       expect(requests.data.cwapikey).to.equal('api_key_5');
       expect(requests.data.refgroups[0]).to.equal('group_5');
     });
@@ -257,7 +257,7 @@ describe('C-WIRE bid adapter', () => {
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.cwid).to.be.null;
       expect(requests.data.slots[0].sizes[0]).to.equal('1x1');
-      expect(requests.data.cwcreative).to.equal(654321);
+      expect(requests.data.cwcreative).to.equal('654321');
       expect(requests.data.cwapikey).to.equal('xxx-xxx-yyy-zzz');
       expect(requests.data.refgroups[0]).to.equal('group_2');
     });
