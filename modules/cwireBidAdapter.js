@@ -20,7 +20,7 @@ import {find} from '../src/polyfill.js';
 
 // ------------------------------------
 const BIDDER_CODE = 'cwire';
-export const ENDPOINT_URL = 'https://embed.cwi.re/delivery/prebid';
+export const ENDPOINT_URL = 'https://embed.cwi.re/prebid/bid';
 export const RENDERER_URL = 'https://cdn.cwi.re/prebid/renderer/LATEST/renderer.min.js';
 // ------------------------------------
 export const CW_PAGE_VIEW_ID = generateUUID();
