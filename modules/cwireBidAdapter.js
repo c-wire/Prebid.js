@@ -24,15 +24,19 @@ export const spec = {
    * @param {validBidRequests[]} - an array of bids
    * @return ServerRequest Info describing the request to the server.
    */
-  buildRequests: function(validBidRequests) {
+  buildRequests: function(validBidRequests, bidderRequest) {
+    // These are passed from C WIRE config:
     // let placementId = getValue(bid.params, 'placementId');
     // let pageId = getValue(bid.params, 'pageId');
+
+    // There are more fields on the refererInfo object
+    let referrer = bidderRequest?.refererInfo?.page
     const payload = {
       userTracker: {
         sharedId: '123',
       },
       slots: validBidRequests,
-      referer: validBidRequests.referer
+      referrer: referrer
       /*
       Use `bidderRequest.bids[]` to get bidder-dependent
       request info.
