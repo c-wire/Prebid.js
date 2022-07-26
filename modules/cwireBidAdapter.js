@@ -28,6 +28,9 @@ export const spec = {
     // let placementId = getValue(bid.params, 'placementId');
     // let pageId = getValue(bid.params, 'pageId');
     const payload = {
+      userTracker: {
+        sharedId: '123',
+      },
       slots: validBidRequests,
       referer: validBidRequests.referer
       /*
