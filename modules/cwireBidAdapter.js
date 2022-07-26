@@ -1,12 +1,9 @@
 import {registerBidder} from '../src/adapters/bidderFactory.js';
 import {BANNER} from '../src/mediaTypes.js';
-import {generateUUID} from '../src/utils.js';
 
 // ------------------------------------
 const BIDDER_CODE = 'cwire';
 export const ENDPOINT_URL = 'https://embed.cwi.re/prebid/bid';
-// ------------------------------------
-export const CW_PAGE_VIEW_ID = generateUUID();
 
 export const spec = {
   code: BIDDER_CODE,
@@ -28,7 +25,11 @@ export const spec = {
    * @return ServerRequest Info describing the request to the server.
    */
   buildRequests: function(validBidRequests) {
+    // let placementId = getValue(bid.params, 'placementId');
+    // let pageId = getValue(bid.params, 'pageId');
     const payload = {
+      slots: validBidRequests,
+      referer: validBidRequests.referer
       /*
       Use `bidderRequest.bids[]` to get bidder-dependent
       request info.
@@ -55,29 +56,7 @@ export const spec = {
    * @return {Bid[]} An array of bids which were nested inside the server.
    */
   interpretResponse: function(serverResponse, bidRequest) {
-    const bidResponses = [];
-
-    const bids = serverResponse.body?.bids || [];
-    bids.forEach(bid => {
-      const bidResponse = {
-        requestId: bid.requestId,
-        cpm: bid.cpm,
-        bidderCode: BIDDER_CODE,
-        width: '400',
-        height: '750',
-        creativeId: bid.creativeId,
-        currency: bid.currency,
-        netRevenue: bid.netRevenue,
-        ttl: bid.ttl,
-        meta: {
-          advertiserDomains: bid.adomains ? bid.adomains : [],
-        },
-        ad: bid.html
-      };
-
-      bidResponses.push(bidResponse);
-    });
-    return bidResponses;
+    return serverResponse.body?.bids || [];
   },
 }
 registerBidder(spec);
