@@ -113,7 +113,11 @@ function setResponsiveRenderSize(doc) {
   if (doc.defaultView && doc.defaultView.frameElement) {
     let frameElement = doc.defaultView.frameElement;
     frameElement.style.width = '100%';
+  }
+}
 
+function registerResponsiveObserver(doc) {
+  if (doc.defaultView && doc.defaultView.frameElement) {
     // Register resize observer on the inner body element.
     new ResizeObserver((entries) => {
       entries
@@ -551,6 +555,7 @@ $$PREBID_GLOBAL$$.renderAd = hook('async', function (doc, id, options) {
     events.emit(BID_WON, bid);
 
     const {height, width, ad, mediaType, adUrl, renderer} = bid;
+    const responsive = true;
 
     // video module
     const adUnitCode = bid.adUnitCode;
@@ -580,8 +585,15 @@ $$PREBID_GLOBAL$$.renderAd = hook('async', function (doc, id, options) {
     } else if (ad) {
       doc.write(ad);
       doc.close();
-      setResponsiveRenderSize(doc);
+      if (responsive) {
+        setResponsiveRenderSize(doc);
+      } else {
+        setRenderSize(doc, width, height);
+      }
       reinjectNodeIfRemoved(creativeComment, doc, 'html');
+      if (responsive) {
+        registerResponsiveObserver(doc);
+      }
       callBurl(bid);
       emitAdRenderSucceeded({ doc, bid, id });
     } else if (adUrl) {
