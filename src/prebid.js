@@ -104,6 +104,29 @@ function setRenderSize(doc, width, height) {
   }
 }
 
+/**
+ * Sets the width of the prebid iFrame to 100%. Allowing the inner body to expand to it's rendered size. And registers
+ * a ResizeObserver on the body to propagate and adjust size changes on the frame, including the initial size adjustment.
+ */
+function setResponsiveRenderSize(doc) {
+  logInfo('Creating responsive iFrame');
+  if (doc.defaultView && doc.defaultView.frameElement) {
+    let frameElement = doc.defaultView.frameElement;
+    frameElement.style.width = '100%';
+
+    // Register resize observer on the inner body element.
+    new ResizeObserver((entries) => {
+      entries
+        .map(entry => entry.target)
+        .forEach(body => {
+          frameElement.setAttribute('height', `${body.offsetHeight}`)
+          frameElement.style.height = `${body.offsetHeight}px`
+          frameElement.dataset.prebidModified = 'true'
+        })
+    }).observe(frameElement.body)
+  }
+}
+
 function validateSizes(sizes, targLength) {
   let cleanSizes = [];
   if (isArray(sizes) && ((targLength) ? sizes.length === targLength : sizes.length > 0)) {
@@ -557,7 +580,7 @@ $$PREBID_GLOBAL$$.renderAd = hook('async', function (doc, id, options) {
     } else if (ad) {
       doc.write(ad);
       doc.close();
-      setRenderSize(doc, width, height);
+      setResponsiveRenderSize(doc);
       reinjectNodeIfRemoved(creativeComment, doc, 'html');
       callBurl(bid);
       emitAdRenderSucceeded({ doc, bid, id });
