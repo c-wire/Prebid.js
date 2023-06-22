@@ -230,5 +230,13 @@ export const spec = {
     navigator.sendBeacon(EVENT_ENDPOINT, JSON.stringify(event))
   },
 
+  getUserSyncs: function(syncOptions, serverResponses, gdprConsent, uspConsent) {
+    const syncs = [];
+
+    console.log({syncOptions, serverResponses, gdprConsent, uspConsent});
+
+    return syncs;
+  }
+
 };
 registerBidder(spec);
