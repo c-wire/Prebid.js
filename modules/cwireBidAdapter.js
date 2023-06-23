@@ -233,7 +233,7 @@ export const spec = {
   getUserSyncs: function(syncOptions, serverResponses, gdprConsent, uspConsent) {
     const syncs = [];
 
-    console.log({syncOptions, serverResponses, gdprConsent, uspConsent});
+    logInfo({syncOptions, serverResponses, gdprConsent, uspConsent});
 
     return syncs;
   }
