@@ -190,6 +190,16 @@ export const spec = {
       },
       ...extensions
     };
+
+    const gdprConsent = bidderRequest.gdprConsent;
+
+    if (gdprConsent) {
+      payload.gdpr = {
+        consent: gdprConsent.consentString,
+        applies: gdprConsent.gdprApplies
+      };
+    }
+
     const payloadString = JSON.stringify(payload);
     return {
       method: 'POST',
