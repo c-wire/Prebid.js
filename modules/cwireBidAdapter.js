@@ -139,6 +139,25 @@ function getCwExtension() {
   };
 }
 
+function getUserSyncConsentQueryParams(gdprConsent) {
+  if (!gdprConsent) {
+    return '';
+  }
+
+  const consentString = gdprConsent.consentString;
+  if (!consentString) {
+    return '';
+  }
+
+  let gdpr = 0;
+  const gdprApplies = gdprConsent.gdprApplies;
+  if (typeof gdprApplies === 'boolean') {
+    gdpr = Number(gdprApplies)
+  }
+
+  return `&gdpr=${gdpr}&gdpr_consent=${consentString}`;
+}
+
 export const spec = {
   code: BIDDER_CODE,
   gvlid: GVL_ID,
@@ -251,18 +270,37 @@ export const spec = {
 
   getUserSyncs: function(syncOptions, serverResponses, gdprConsent, uspConsent) {
     logInfo('Collecting user-syncs: ', JSON.stringify({syncOptions, gdprConsent, uspConsent, serverResponses}));
-
     const syncs = []
-    if (hasPurpose1Consent(gdprConsent)) {
-      logInfo('GDPR purpose 1 consent was given, adding user-syncs')
-      let type = (syncOptions.pixelEnabled) ? 'image' : null ?? (syncOptions.iframeEnabled) ? 'iframe' : null
-      if (type) {
-        syncs.push({
-          type: type,
-          url: 'https://ib.adnxs.com/getuid?https://prebid.cwi.re/v1/cookiesync?xandrId=$UID'
-        })
-      }
+
+    if (!hasPurpose1Consent(gdprConsent)) {
+      return []
     }
+
+    const consentQueryParams = getUserSyncConsentQueryParams(gdprConsent)
+    const url = 'https://ib.adnxs.com/getuid?https://prebid.cwi.re/v1/cookiesync?xandrId=$UID' + consentQueryParams
+
+    // let type = (syncOptions.pixelEnabled) ? 'image' : null ?? (syncOptions.iframeEnabled) ? 'iframe' : null
+    // if (type) {
+    //   syncs.push({
+    //     type: type,
+    //     url: url
+    //   })
+    // }
+
+    if (syncOptions.iframeEnabled) {
+      syncs.push({
+        type: 'iframe',
+        url
+      });
+    }
+
+    if (syncOptions.pixelEnabled) {
+      syncs.push({
+        type: 'image',
+        url
+      });
+    }
+
     logInfo('Collected user-syncs: ', JSON.stringify({syncs}))
     return syncs
   }
