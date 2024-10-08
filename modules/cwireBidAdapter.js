@@ -1,6 +1,6 @@
 import {registerBidder} from '../src/adapters/bidderFactory.js';
 import {getStorageManager} from '../src/storageManager.js';
-import {BANNER} from '../src/mediaTypes.js';
+import {BANNER, NATIVE, VIDEO} from '../src/mediaTypes.js';
 import {generateUUID, getParameterByName, isNumber, logError, logInfo} from '../src/utils.js';
 import {hasPurpose1Consent} from '../src/utils/gdpr.js';
 import { sendBeacon } from '../src/ajax.js';
@@ -143,7 +143,7 @@ function getCwExtension() {
 export const spec = {
   code: BIDDER_CODE,
   gvlid: GVL_ID,
-  supportedMediaTypes: [BANNER],
+  supportedMediaTypes: [BANNER, NATIVE, VIDEO],
 
   /**
    * Determines whether the given bid request is valid.
