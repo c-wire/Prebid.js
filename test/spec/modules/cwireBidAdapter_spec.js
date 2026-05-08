@@ -7,6 +7,7 @@ import sinon, { stub } from "sinon";
 import { config } from "../../../src/config.js";
 import * as autoplayLib from "../../../libraries/autoplayDetection/autoplay.js";
 import * as adUnits from 'src/utils/adUnits';
+import { BANNER, VIDEO } from "../../../src/mediaTypes.js";
 
 describe("C-WIRE bid adapter", () => {
   config.setConfig({ debug: true });
@@ -53,6 +54,31 @@ describe("C-WIRE bid adapter", () => {
       ],
     },
   };
+  const vastXml = '<VAST version="3.0"><Ad></Ad></VAST>';
+  const videoBidRequest = {
+    bidder: "cwire",
+    params: {
+      domainId: 4057,
+    },
+    adUnitCode: "video-adunit-code",
+    mediaTypes: {
+      video: {
+        context: "instream",
+        playerSize: [640, 480],
+        mimes: ["video/mp4"],
+        protocols: [2, 3, 5, 6],
+        startdelay: 0,
+        placement: 1,
+        playbackmethod: [2],
+        api: [2],
+        linearity: 1,
+      },
+    },
+    bidId: "video-bid-id",
+    bidderRequestId: "video-request-id",
+    auctionId: "video-auction-id",
+    transactionId: "video-transaction-id",
+  };
 
   beforeEach(function () {
     sandbox = sinon.createSandbox();
@@ -68,12 +94,24 @@ describe("C-WIRE bid adapter", () => {
       expect(spec.buildRequests).to.exist.and.to.be.a("function");
       expect(spec.interpretResponse).to.exist.and.to.be.a("function");
     });
+
+    it("supports banner and video media types", function () {
+      expect(spec.supportedMediaTypes).to.include.members([BANNER, VIDEO]);
+    });
   });
   describe("buildRequests", function () {
     it("sends bid request to ENDPOINT via POST", function () {
       const request = spec.buildRequests(bidRequests, bidderRequest);
       expect(request.url).to.equal(BID_ENDPOINT);
       expect(request.method).to.equal("POST");
+    });
+
+    it("passes video mediaTypes to the bid endpoint", function () {
+      const request = spec.buildRequests([videoBidRequest], bidderRequest);
+      const payload = JSON.parse(request.data);
+
+      expect(payload.slots[0].mediaTypes.video).to.deep.equal(videoBidRequest.mediaTypes.video);
+      expect(request.bids[0]).to.deep.equal(videoBidRequest);
     });
   });
   describe("buildRequests with given creative", function () {
@@ -317,6 +355,109 @@ describe("C-WIRE bid adapter", () => {
       const bids = spec.interpretResponse(bidResponse, {});
 
       expect(bids[0].ad).to.exist;
+    });
+
+    it("keeps banner responses on the banner path even if a custom type field is present", function () {
+      const bidResponse = deepClone(response);
+      bidResponse.body.bids[0].type = VIDEO;
+      const bids = spec.interpretResponse(bidResponse, { bids: bidRequests });
+
+      expect(bids[0].ad).to.equal("<h1>Hello world</h1>");
+      expect(bids[0].mediaType).to.not.equal(VIDEO);
+    });
+
+    it("maps VAST XML responses to video bids", function () {
+      const bidResponse = {
+        body: {
+          bids: [
+            {
+              cpm: 5,
+              currency: "USD",
+              dimensions: [640, 480],
+              netRevenue: true,
+              creativeId: "video-creative",
+              requestId: videoBidRequest.bidId,
+              ttl: 360,
+              vastXml,
+            },
+          ],
+        },
+      };
+      const bids = spec.interpretResponse(bidResponse, { bids: [videoBidRequest] });
+
+      expect(bids[0].mediaType).to.equal(VIDEO);
+      expect(bids[0].vastXml).to.equal(vastXml);
+      expect(bids[0].ad).to.not.exist;
+    });
+
+    it("maps VAST URL responses to video bids", function () {
+      const vastUrl = "https://prebid.cwi.re/vast/video-ad.xml";
+      const bidResponse = {
+        body: {
+          bids: [
+            {
+              cpm: 5,
+              currency: "USD",
+              dimensions: [640, 480],
+              netRevenue: true,
+              creativeId: "video-creative",
+              requestId: videoBidRequest.bidId,
+              ttl: 360,
+              vastUrl,
+            },
+          ],
+        },
+      };
+      const bids = spec.interpretResponse(bidResponse, { bids: [videoBidRequest] });
+
+      expect(bids[0].mediaType).to.equal(VIDEO);
+      expect(bids[0].vastUrl).to.equal(vastUrl);
+    });
+
+    it("uses VAST XML from html when responding to a video-only request", function () {
+      const bidResponse = {
+        body: {
+          bids: [
+            {
+              html: vastXml,
+              cpm: 5,
+              currency: "USD",
+              dimensions: [640, 480],
+              netRevenue: true,
+              creativeId: "video-creative",
+              requestId: videoBidRequest.bidId,
+              ttl: 360,
+            },
+          ],
+        },
+      };
+      const bids = spec.interpretResponse(bidResponse, { bids: [videoBidRequest] });
+
+      expect(bids[0].mediaType).to.equal(VIDEO);
+      expect(bids[0].vastXml).to.equal(vastXml);
+      expect(bids[0].ad).to.not.exist;
+    });
+
+    it("drops video responses that do not include VAST", function () {
+      const bidResponse = {
+        body: {
+          bids: [
+            {
+              html: "<h1>Hello world</h1>",
+              cpm: 5,
+              currency: "USD",
+              dimensions: [640, 480],
+              netRevenue: true,
+              creativeId: "video-creative",
+              requestId: videoBidRequest.bidId,
+              ttl: 360,
+            },
+          ],
+        },
+      };
+      const bids = spec.interpretResponse(bidResponse, { bids: [videoBidRequest] });
+
+      expect(bids).to.be.empty;
     });
   });
 
