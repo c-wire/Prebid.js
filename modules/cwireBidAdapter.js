@@ -1,6 +1,6 @@
 import { registerBidder } from "../src/adapters/bidderFactory.js";
 import { getStorageManager } from "../src/storageManager.js";
-import { BANNER } from "../src/mediaTypes.js";
+import { BANNER, VIDEO } from "../src/mediaTypes.js";
 import {
   getParameterByName,
   isNumber,
@@ -22,6 +22,7 @@ import { getAdUnitElement } from '../src/utils/adUnits.js';
 // ------------------------------------
 const BIDDER_CODE = "cwire";
 const CWID_KEY = "cw_cwid";
+const VAST_XML_REGEX = /^\s*(?:<\?xml[^>]*>\s*)?<VAST[\s>]/i;
 
 export const BID_ENDPOINT = "https://prebid.cwi.re/v1/bid";
 export const EVENT_ENDPOINT = "https://prebid.cwi.re/v1/event";
@@ -169,10 +170,68 @@ function getCwExtension() {
   };
 }
 
+function getBidRequest(responseBid, request) {
+  return request?.bids?.find((bid) => (
+    bid.bidId === responseBid.requestId ||
+    bid.bidId === responseBid.bidId
+  ));
+}
+
+function isVastXml(value) {
+  return typeof value === "string" && VAST_XML_REGEX.test(value);
+}
+
+function isVideoResponse(responseBid, requestBid) {
+  const hasVast = (
+    responseBid.vastXml ||
+    responseBid.vastXML ||
+    responseBid.vastUrl ||
+    responseBid.vastURL ||
+    isVastXml(responseBid.html)
+  );
+  const hasVideoMediaType = (
+    responseBid.mediaType === VIDEO ||
+    responseBid.adType === VIDEO ||
+    responseBid.type === VIDEO
+  );
+  const requestSupportsVideo = !!requestBid?.mediaTypes?.video;
+
+  return (
+    hasVast ||
+    (requestSupportsVideo && (hasVideoMediaType || !requestBid?.mediaTypes?.banner))
+  );
+}
+
+function mapBidResponse(responseBid, request) {
+  const { html, vastXml, vastXML, vast, vastUrl, vastURL, ...rest } = responseBid;
+  const requestBid = getBidRequest(responseBid, request);
+
+  if (isVideoResponse(responseBid, requestBid)) {
+    const vastXmlResponse = vastXml || vastXML || vast || (isVastXml(html) ? html : null);
+    const vastUrlResponse = vastUrl || vastURL;
+
+    if (!vastXmlResponse && !vastUrlResponse) {
+      return null;
+    }
+
+    return {
+      ...rest,
+      mediaType: VIDEO,
+      ...(vastXmlResponse && { vastXml: vastXmlResponse }),
+      ...(vastUrlResponse && { vastUrl: vastUrlResponse }),
+    };
+  }
+
+  return {
+    ...rest,
+    ad: html,
+  };
+}
+
 export const spec = {
   code: BIDDER_CODE,
   gvlid: GVL_ID,
-  supportedMediaTypes: [BANNER],
+  supportedMediaTypes: [BANNER, VIDEO],
 
   /**
    * Determines whether the given bid request is valid.
@@ -255,6 +314,7 @@ export const spec = {
       method: "POST",
       url: BID_ENDPOINT,
       data: payloadString,
+      bids: validBidRequests,
     };
   },
   /**
@@ -271,12 +331,11 @@ export const spec = {
       }
     }
 
-    // Rename `html` response property to `ad` as used by prebid.
-    const bids = serverResponse.body?.bids.map(({ html, ...rest }) => ({
-      ...rest,
-      ad: html,
-    }));
-    return bids || [];
+    // Rename banner `html` to `ad`; video responses must expose VAST.
+    const bids = (serverResponse.body?.bids || [])
+      .map((bid) => mapBidResponse(bid, bidRequest))
+      .filter(Boolean);
+    return bids;
   },
 
   onBidWon: function (bid) {

@@ -27,6 +27,8 @@ Below, the list of C-WIRE params and where they can be set.
 
 ### adUnit configuration
 
+#### Banner
+
 ```javascript
 var adUnits = [
   {
@@ -62,6 +64,36 @@ var adUnits = [
             }
         }]
     }
+];
+```
+
+#### Video
+
+```javascript
+var adUnits = [
+  {
+    code: 'video_target_div_id', // REQUIRED
+    mediaTypes: {
+      video: {
+        context: 'instream',
+        playerSize: [640, 480],
+        mimes: ['video/mp4'],
+        protocols: [2, 3, 5, 6],
+        startdelay: 0,
+        placement: 1,
+        playbackmethod: [2],
+        api: [2],
+        linearity: 1
+      }
+    },
+    bids: [{
+      bidder: 'cwire',
+      params: {
+        domainId: 1422,               // required - number
+        placementId: 2211521,         // optional - number
+      }
+    }]
+  }
 ];
 ```
 
