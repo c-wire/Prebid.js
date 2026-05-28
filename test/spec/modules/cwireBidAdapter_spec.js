@@ -96,12 +96,12 @@ describe('C-WIRE bid adapter (ORTB2)', () => {
       expect(spec.supportedMediaTypes).to.include.members([BANNER, VIDEO]);
     });
 
-    it('uses the v2 bid endpoint', function () {
-      expect(BID_ENDPOINT).to.equal('https://prebid.cwi.re/v2/bid');
+    it('uses the v1 bid endpoint', function () {
+      expect(BID_ENDPOINT).to.equal('https://ortb.cwi.re/v1/bid');
     });
 
-    it('uses the v2 event endpoint', function () {
-      expect(EVENT_ENDPOINT).to.equal('https://prebid.cwi.re/v2/event');
+    it('uses the v1 event endpoint', function () {
+      expect(EVENT_ENDPOINT).to.equal('https://prebid.cwi.re/v1/event');
     });
   });
 
