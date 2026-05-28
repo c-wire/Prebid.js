@@ -17,7 +17,7 @@ import { getAdUnitElement } from '../src/utils/adUnits.js';
 const BIDDER_CODE = 'cwire';
 const CWID_KEY = 'cw_cwid';
 
-export const BID_ENDPOINT = 'https://prebid.cwi.re/v2/bid';
+export const BID_ENDPOINT = 'https://ortb.cwi.re/v1/bid';
 export const EVENT_ENDPOINT = 'https://prebid.cwi.re/v2/event';
 export const GVL_ID = 1081;
 
