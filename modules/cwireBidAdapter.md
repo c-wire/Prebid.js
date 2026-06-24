@@ -10,7 +10,7 @@ Maintainer: devs@cwire.com
 
 Prebid.js Adapter for C-Wire. Uses native OpenRTB 2.x request/response handling via Prebid's `ortbConverter` library. Supports banner and video.
 
-Bid requests are POSTed as OpenRTB 2.x JSON to `https://prebid.cwi.re/v2/bid`. Bidder params and cwire-specific signals are carried under `imp[].ext.bidder` and `request.ext.cwire` / `imp[].ext.cwire`.
+Bid requests are POSTed as OpenRTB 2.x JSON to `https://prebid2.cwi.re/v1/bid`. Bidder params and cwire-specific signals are carried under `imp[].ext.bidder` and `request.ext.cwire` / `imp[].ext.cwire`.
 
 ## Configuration
 

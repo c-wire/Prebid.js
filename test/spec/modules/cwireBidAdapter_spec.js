@@ -97,11 +97,11 @@ describe('C-WIRE bid adapter (ORTB2)', () => {
     });
 
     it('uses the v1 bid endpoint', function () {
-      expect(BID_ENDPOINT).to.equal('https://ortb.cwi.re/v1/bid');
+      expect(BID_ENDPOINT).to.equal('https://prebid2.cwi.re/v1/bid');
     });
 
     it('uses the v1 event endpoint', function () {
-      expect(EVENT_ENDPOINT).to.equal('https://prebid.cwi.re/v1/event');
+      expect(EVENT_ENDPOINT).to.equal('https://prebid2.cwi.re/v1/event');
     });
   });
 
