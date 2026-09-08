@@ -7,7 +7,6 @@ import {
   spec,
   storage,
 } from '../../../modules/cwireBidAdapter.js';
-import { deepClone } from '../../../src/utils.js';
 import * as utils from 'src/utils.js';
 import * as ajaxLib from 'src/ajax.js';
 import * as autoplayLib from '../../../libraries/autoplayDetection/autoplay.js';
@@ -125,6 +124,10 @@ describe('C-WIRE bid adapter (ORTB2)', () => {
     it('returns false when domainId is missing and pageId+placementId incomplete', function () {
       expect(spec.isBidRequestValid(makeBannerBid({ params: { pageId: 42 } }))).to.equal(false);
     });
+
+    it('returns false when domainId is missing and legacy pageId is missing', function () {
+      expect(spec.isBidRequestValid(makeBannerBid({ params: { placementId: 99 } }))).to.equal(false);
+    });
   });
 
   describe('buildRequests: envelope', function () {
@@ -133,7 +136,8 @@ describe('C-WIRE bid adapter (ORTB2)', () => {
       expect(req.method).to.equal('POST');
       expect(req.url).to.equal(BID_ENDPOINT);
       expect(req.data).to.be.an('object');
-      expect(req.data.imp).to.be.an('array').with.lengthOf(1);
+      expect(req.data.imp).to.be.an('array');
+      expect(req.data.imp).to.have.lengthOf(1);
     });
 
     it('passes bidderRequest.timeout through as tmax', function () {
@@ -364,6 +368,16 @@ describe('C-WIRE bid adapter (ORTB2)', () => {
       expect(bids[0].cpm).to.equal(1.5);
     });
 
+    it('falls back to mediaType from the request when mtype is missing (banner-only adunit)', function () {
+      const bid = makeBannerBid();
+      const req = spec.buildRequests([bid], makeBidderRequest());
+      const noMtypeResponse = bannerOrtbResponse(req.data.imp[0].id);
+      delete noMtypeResponse.seatbid[0].bid[0].mtype;
+      const bids = spec.interpretResponse({ body: noMtypeResponse }, req);
+      expect(bids).to.have.lengthOf(1);
+      expect(bids[0].mediaType).to.equal(BANNER);
+    });
+
     if (FEATURES.VIDEO) {
       it('maps a video ORTB response (mtype=2) to a video bid with vastXml', function () {
         const bid = makeVideoBid();
@@ -409,6 +423,19 @@ describe('C-WIRE bid adapter (ORTB2)', () => {
       spec.interpretResponse({ body }, req);
 
       expect(setStub.calledWith('cw_cwid', 'new-cwid-from-server')).to.equal(true);
+    });
+
+    it('does not persist cwid from response when localStorage is disabled', function () {
+      sandbox.stub(storage, 'localStorageIsEnabled').returns(false);
+      const setStub = sandbox.stub(storage, 'setDataInLocalStorage');
+
+      const bid = makeBannerBid();
+      const req = spec.buildRequests([bid], makeBidderRequest());
+      const body = bannerOrtbResponse(req.data.imp[0].id);
+      body.ext = { cwire: { cwid: 'new-cwid-from-server' } };
+      spec.interpretResponse({ body }, req);
+
+      expect(setStub.called).to.equal(false);
     });
 
     it('does not overwrite an existing cwid in localStorage', function () {
